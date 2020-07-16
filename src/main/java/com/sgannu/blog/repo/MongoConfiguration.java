@@ -16,12 +16,12 @@ import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguratio
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 
 import static java.util.Objects.nonNull;
-
+/*
 @Profile("dev")
 @Configuration
 @EnableReactiveMongoRepositories
 @EnableConfigurationProperties(MongoProperties.class)
-@Slf4j
+@Slf4j */
 public class MongoConfiguration extends AbstractReactiveMongoConfiguration {
     private final MongoProperties mongoProperties;
     private final ConfigurableEnvironment env;
@@ -42,7 +42,7 @@ public class MongoConfiguration extends AbstractReactiveMongoConfiguration {
     @Bean(destroyMethod = "close")
     public MongoClient reactiveMongoClient() {
         //Integer localPort = env.getProperty("spring.data.mongodb.port", Integer.class);
-        log.info("Starting mongodb on port: {}", localPort);
+        // log.info("Starting mongodb on port: {}", localPort);
 
         if (nonNull(localPort)) {
             return MongoClients.create(String.format("mongodb://localhost:%s/%s", localPort, getDatabaseName()));

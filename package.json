@@ -6,7 +6,8 @@
     "start": "./gradlew bootRun --args='--spring.profiles.active=dev'",
     "test": "./gradlew test",
     "itest": "./gradlew integrationTest",
-    "integration": "./gradlew integrationTest"
+    "integration": "./gradlew integrationTest",
+    "open" : "open http://localhost:8080/swagger-ui/index.html"
   },
   "repository": {
     "type": "git",

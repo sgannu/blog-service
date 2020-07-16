@@ -1,8 +1,9 @@
 package com.sgannu.blog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sgannu.blog.model.Post;
-import com.sgannu.blog.repo.PostRepository;
+import com.sgannu.blog.model.BlogPost;
+import com.sgannu.blog.model.BloggerPosts;
+import com.sgannu.blog.service.BloggerPostsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -10,11 +11,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -30,67 +34,72 @@ public class BlogServiceIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private PostRepository postRepository;
+    private ReactiveMongoTemplate mongoTemplate;
+    @Autowired
+    private BloggerPostsService bloggerPostsService;
 
-    private Post postData;
+    private BlogPost blogPostEntry;
+    private BloggerPosts bloggerPosts;
 
     @BeforeEach
     void setup() {
-        postData = Post.builder().id(TEST_ID).build();
+        blogPostEntry = BlogPost.builder().content("TEST").build();
+        bloggerPosts = BloggerPosts.builder().blogPosts(Arrays.asList(blogPostEntry)).build();
+        mongoTemplate.dropCollection(BloggerPosts.class);
+        createPostData();
     }
     @Test
-    void saveBlogPost() throws Exception {
-        mockMvc.post().uri("posts/save")
+    void newBlogPost() throws Exception {
+        mockMvc.post().uri("posts/new?bloggerId="+TEST_ID)
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Mono.just(postData), Post.class)
+                .body(Mono.just(blogPostEntry), BlogPost.class)
                 .exchange()
                 .expectStatus()
                 .isOk();
 
-        Mono<Post> postEntity = postRepository.findById(TEST_ID);
-        validateReactiveResponse(postEntity);
+        validateReactiveResponse();
     }
 
     @Test
     void updateBlogPost() throws Exception {
-        createPostData();
-        postData.setContent("TEST");
-        mockMvc.post().uri("posts/save")
+        blogPostEntry.setContent("UPDATED");
+        mockMvc.post().uri("posts/update?bloggerId="+TEST_ID)
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Mono.just(postData), Post.class)
+                .body(Mono.just(blogPostEntry), BlogPost.class)
                 .exchange()
                 .expectStatus()
                 .isOk();
 
-        Mono<Post> postEntity = postRepository.findById(TEST_ID);
-        validateReactiveResponse(postEntity);
+        validateReactiveResponse();
     }
 
     @Test
     void getBlogPostById() throws Exception {
-        createPostData();
 
-        mockMvc.get().uri("posts/get-post-id?id="+TEST_ID)
+        mockMvc.get().uri(String.format("posts/get-by-id?bloggerId=%s&postId=%s", TEST_ID, TEST_ID))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus()
                 .isOk();
 
-        Mono<Post> getEntity = postRepository.findById(TEST_ID);
-        validateReactiveResponse(getEntity);
+        Mono<BlogPost> postEntity = bloggerPostsService.findPostById(TEST_ID, TEST_ID);
+        StepVerifier.create(postEntity)
+                .verifyComplete();
     }
 
     private void createPostData() {
-        Post postData = Post.builder().id(TEST_ID).build();
-        Mono<Post> postEntity = postRepository.save(postData);
-        validateReactiveResponse(postEntity);
+        Mono<BloggerPosts> postEntity = mongoTemplate.save(bloggerPosts);
+        StepVerifier.create(postEntity)
+                .consumeNextWith(response -> assertEquals(bloggerPosts, response))
+                .verifyComplete();
     }
 
-    private void validateReactiveResponse(Mono<Post> postEntity) {
+    private void validateReactiveResponse() {
+        Mono<BlogPost> postEntity = bloggerPostsService.findPostById(TEST_ID, TEST_ID);
         StepVerifier.create(postEntity)
-                .consumeNextWith(response -> assertEquals(postData, response))
                 .verifyComplete();
+
     }
 }

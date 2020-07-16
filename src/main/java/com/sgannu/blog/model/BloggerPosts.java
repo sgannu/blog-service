@@ -2,18 +2,18 @@ package com.sgannu.blog.model;
 
 import lombok.Builder;
 import lombok.Data;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
+import java.util.List;
 
 @Data
-@Document
+@Document(collection = "blogger-posts")
 @Builder
-public class Post {
+public class BloggerPosts {
     @Id
-    private String id;
-    private String title;
-    private String content;
-    Date publishDate;
+    private ObjectId _id;
+    private String nickhandle;
+    List<BlogPost> blogPosts;
 }
