@@ -3,6 +3,7 @@ package com.sgannu.blog;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sgannu.blog.model.Post;
 import com.sgannu.blog.repo.PostRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,13 +13,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.test.web.servlet.MockMvc;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.mock.http.server.reactive.MockServerHttpRequest.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
 @ExtendWith(SpringExtension.class)
@@ -34,10 +32,14 @@ public class BlogServiceIntegrationTest {
     @Autowired
     private PostRepository postRepository;
 
+    private Post postData;
+
+    @BeforeEach
+    void setup() {
+        postData = Post.builder().id(TEST_ID).build();
+    }
     @Test
     void saveBlogPost() throws Exception {
-        Post postData = Post.builder().id(TEST_ID).build();
-
         mockMvc.post().uri("posts/save")
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -47,8 +49,48 @@ public class BlogServiceIntegrationTest {
                 .isOk();
 
         Mono<Post> postEntity = postRepository.findById(TEST_ID);
+        validateReactiveResponse(postEntity);
+    }
+
+    @Test
+    void updateBlogPost() throws Exception {
+        createPostData();
+        postData.setContent("TEST");
+        mockMvc.post().uri("posts/save")
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Mono.just(postData), Post.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        Mono<Post> postEntity = postRepository.findById(TEST_ID);
+        validateReactiveResponse(postEntity);
+    }
+
+    @Test
+    void getBlogPostById() throws Exception {
+        createPostData();
+
+        mockMvc.get().uri("posts/get-post-id?id="+TEST_ID)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        Mono<Post> getEntity = postRepository.findById(TEST_ID);
+        validateReactiveResponse(getEntity);
+    }
+
+    private void createPostData() {
+        Post postData = Post.builder().id(TEST_ID).build();
+        Mono<Post> postEntity = postRepository.save(postData);
+        validateReactiveResponse(postEntity);
+    }
+
+    private void validateReactiveResponse(Mono<Post> postEntity) {
         StepVerifier.create(postEntity)
-                .consumeNextWith(response -> assertEquals(TEST_ID, response.getId()))
+                .consumeNextWith(response -> assertEquals(postData, response))
                 .verifyComplete();
     }
 }

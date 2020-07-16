@@ -24,11 +24,11 @@ public class PostController {
 
     /**
      * update incase of special treatment compared to Save
-     */
     @PostMapping("/update")
     public Mono<String> updateEntry(@RequestBody final Post post) {
         return postService.save(post);
     }
+     */
 
     @GetMapping("/get-post-id")
     public Mono<Post> getById(@RequestParam(name = "id") final String id) {
