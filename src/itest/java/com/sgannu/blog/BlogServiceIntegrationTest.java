@@ -16,8 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.mock.http.server.reactive.MockServerHttpRequest.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -39,7 +38,7 @@ public class BlogServiceIntegrationTest {
     void saveBlogPost() throws Exception {
         Post postData = Post.builder().id(TEST_ID).build();
 
-        mockMvc.post().uri("/post-entry")
+        mockMvc.post().uri("posts/save")
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Mono.just(postData), Post.class)

@@ -2,11 +2,20 @@ plugins {
 	id 'org.springframework.boot' version '2.4.0-M1'
 	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
 	id 'java'
+	id 'idea'
+	id 'eclipse'
 }
 
 group = 'com.sgannu.blog'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '11'
+
+idea {
+	module {
+		sourceDirs -= file('src/itest/java')
+		testSourceDirs += file('src/itest/java')
+	}
+}
 
 configurations {
 	compileOnly {
@@ -17,6 +26,17 @@ configurations {
 repositories {
 	mavenCentral()
 	maven { url 'https://repo.spring.io/milestone' }
+}
+
+sourceSets {
+	integrationTest {
+		java {
+			compileClasspath += main.output + test.output
+			runtimeClasspath += main.output + test.output
+			srcDir file('src/itest/java')
+		}
+		resources.srcDir file('src/itest/resources')
+	}
 }
 
 dependencies {
@@ -41,29 +61,9 @@ dependencies {
 
 test {
 	useJUnitPlatform {
-		// excludeTags 'IntegrationTest'
+		excludeTags 'IntegrationTest'
 	}
 }
-
 
 // INTEGRATION TEST CONFIGURATION
-sourceSets {
-	intTest {
-		compileClasspath += sourceSets.main.output
-		runtimeClasspath += sourceSets.main.output
-	}
-}
-
-configurations {
-	intTestImplementation.extendsFrom implementation
-	intTestRuntimeOnly.extendsFrom runtimeOnly
-}
-
-task integrationTest(type: Test) {
-	description = 'Runs integration tests.'
-	group = 'verification'
-
-	testClassesDirs = sourceSets.intTest.output.classesDirs
-	classpath = sourceSets.intTest.runtimeClasspath
-	shouldRunAfter test
-}
+apply from: "$rootDir/integration-test.gradle"

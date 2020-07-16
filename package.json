@@ -1,0 +1,29 @@
+{
+  "name": "blog-service",
+  "version": "1.0.0",
+  "description": "Sample Spring reactive microservice with MongoDB",
+  "scripts": {
+    "start": "./gradlew bootRun --args='--spring.profiles.active=dev'",
+    "test": "./gradlew test",
+    "itest": "./gradlew integrationTest",
+    "integration": "./gradlew integrationTest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sgannu/blog-service.git"
+  },
+  "keywords": [
+    "spring",
+    "spring-boot",
+    "reactive",
+    "mongodb",
+    "embedded-mongodb",
+    "webflux"
+  ],
+  "author": "Srinivas Gannu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sgannu/blog-service/issues"
+  },
+  "homepage": "https://github.com/sgannu/blog-service#readme"
+}

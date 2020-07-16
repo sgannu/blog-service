@@ -18,7 +18,15 @@ public class PostController {
     }
 
     @PostMapping("/save")
-    public Mono<String> saveEntry(@RequestBody final Post post) {
+    public Mono<String> saveOrUpdateEntry(@RequestBody final Post post) {
+        return postService.save(post);
+    }
+
+    /**
+     * update incase of special treatment compared to Save
+     */
+    @PostMapping("/update")
+    public Mono<String> updateEntry(@RequestBody final Post post) {
         return postService.save(post);
     }
 

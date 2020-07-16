@@ -2,7 +2,6 @@ package com.sgannu.blog.repo;
 
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.mongo.MongoProperties;
 import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration;
@@ -17,18 +16,17 @@ import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRep
 
 import static java.util.Objects.nonNull;
 
-@Profile("dev")
+@Profile("itest")
 @Configuration
 @EnableReactiveMongoRepositories
 @EnableConfigurationProperties(MongoProperties.class)
-@Slf4j
-public class MongoConfiguration extends AbstractReactiveMongoConfiguration {
+public class MongoTestConfiguration extends AbstractReactiveMongoConfiguration {
     private final MongoProperties mongoProperties;
     private final ConfigurableEnvironment env;
     @Value("${spring.data.mongodb.port}")
     private String localPort;
 
-    public MongoConfiguration(MongoProperties mongoProperties, ConfigurableEnvironment env) {
+    public MongoTestConfiguration(MongoProperties mongoProperties, ConfigurableEnvironment env) {
         this.mongoProperties = mongoProperties;
         this.env = env;
     }
@@ -41,8 +39,6 @@ public class MongoConfiguration extends AbstractReactiveMongoConfiguration {
     @Override
     @Bean(destroyMethod = "close")
     public MongoClient reactiveMongoClient() {
-        //Integer localPort = env.getProperty("spring.data.mongodb.port", Integer.class);
-        log.info("Starting mongodb on port: {}", localPort);
 
         if (nonNull(localPort)) {
             return MongoClients.create(String.format("mongodb://localhost:%s/%s", localPort, getDatabaseName()));
@@ -53,6 +49,6 @@ public class MongoConfiguration extends AbstractReactiveMongoConfiguration {
 
     @Configuration
     @Import({EmbeddedMongoAutoConfiguration.class})
-    public static class EmbeddedMongoConfiguration {
+        public static class EmbeddedMongoConfiguration {
     }
 }
