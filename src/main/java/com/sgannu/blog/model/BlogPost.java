@@ -7,14 +7,16 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Document
 @Builder
 public class BlogPost {
     @Id
-    private ObjectId _id;
+    private ObjectId id;
     private String title;
     private String content;
     private Date publishDate;
+    private List<BlogPostComment> comments;
 }

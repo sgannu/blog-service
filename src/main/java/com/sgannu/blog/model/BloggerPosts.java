@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 public class BloggerPosts {
     @Id
-    private ObjectId _id;
-    private String nickhandle;
+    private ObjectId id;
+    private String nickHandle;
     List<BlogPost> blogPosts;
 }
