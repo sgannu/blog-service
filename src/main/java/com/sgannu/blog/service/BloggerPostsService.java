@@ -1,6 +1,7 @@
 package com.sgannu.blog.service;
 
 import com.sgannu.blog.model.BlogPost;
+import com.sgannu.blog.model.BlogPostComment;
 import com.sgannu.blog.model.BloggerPosts;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -22,7 +23,7 @@ public class BloggerPostsService {
 
     public Mono<BlogPost> findPostById(String bloggerId, String postId) {
         Query query = new Query(Criteria.where("id").is(bloggerId))
-                .addCriteria(Criteria.where("blogPosts.id").is(postId));
+                .addCriteria(Criteria.where("blogPosts").elemMatch(Criteria.where("id").is(postId)));
 
         Mono<BloggerPosts> bloggerPosts = mongoTemplate.findOne(query, BloggerPosts.class);
         return bloggerPosts.map(posts -> posts.getBlogPosts().get(0));
@@ -36,7 +37,7 @@ public class BloggerPostsService {
 
     public Mono<BloggerPosts> updateBlogPost(String bloggerId, BlogPost blogPost) {
         Query query = new Query(Criteria.where("id").is(bloggerId));
-        Update update = new Update().pull("blogPosts", blogPost).pull("blogPosts", blogPost);
+        Update update = new Update().pull("blogPosts", blogPost).push("blogPosts", blogPost);
 
         return mongoTemplate.findAndModify(query, update, BloggerPosts.class);
     }
@@ -46,4 +47,12 @@ public class BloggerPostsService {
         return mongoTemplate.findOne(query, BloggerPosts.class);
     }
 
+    public Mono<BloggerPosts> commentOnPost(String commentOnId, String postId, BlogPostComment comment) {
+        Query query = new Query(Criteria.where("id").is(commentOnId))
+                .addCriteria(Criteria.where("blogPosts").elemMatch(Criteria.where("id").is(postId)));
+        Update update = new Update().addToSet("comments", comment);
+
+        return mongoTemplate.findAndModify(query, update, BloggerPosts.class);
+
+    }
 }

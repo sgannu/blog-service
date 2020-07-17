@@ -1,6 +1,7 @@
 package com.sgannu.blog.service;
 
 import com.sgannu.blog.model.BlogPost;
+import com.sgannu.blog.model.BlogPostComment;
 import com.sgannu.blog.model.BloggerPosts;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -34,11 +35,13 @@ public class BloggerPostsServiceTest {
     private ReactiveMongoTemplate mongoTemplate;
     private BlogPost blogPostEntry;
     private BloggerPosts bloggerPosts;
+    private BlogPostComment blogPostComment;
 
     @BeforeEach
     void setUp() {
         blogPostEntry = BlogPost.builder().title("title").build();
         bloggerPosts = BloggerPosts.builder().blogPosts(Arrays.asList(blogPostEntry)).build();
+        blogPostComment = BlogPostComment.builder().byNickHandle(TEST_ID).comment("Comment").build();
     }
 
     @Test
@@ -70,9 +73,18 @@ public class BloggerPostsServiceTest {
     }
 
     @Test
-    void whengetPostsByNickHandleThenShouldReturnPosts() {
+    void whenGetPostsByNickHandleThenShouldReturnPosts() {
         when(mongoTemplate.findOne(any(Query.class), any())).thenReturn(Mono.just(bloggerPosts));
         Mono<BloggerPosts> postResponse = serviceUnderTest.getPostsByNickHandle(TEST_ID);
+        StepVerifier.create(postResponse)
+                .consumeNextWith(response -> assertEquals(bloggerPosts, response))
+                .verifyComplete();
+    }
+
+    @Test
+    void whenCommentOnPostThenShouldSave() {
+        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any())).thenReturn(Mono.just(bloggerPosts));
+        Mono<BloggerPosts> postResponse = serviceUnderTest.commentOnPost(TEST_ID, TEST_ID, blogPostComment);
         StepVerifier.create(postResponse)
                 .consumeNextWith(response -> assertEquals(bloggerPosts, response))
                 .verifyComplete();

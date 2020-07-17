@@ -2,6 +2,7 @@ package com.sgannu.blog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sgannu.blog.model.BlogPost;
+import com.sgannu.blog.model.BlogPostComment;
 import com.sgannu.blog.model.BloggerPosts;
 import com.sgannu.blog.service.BloggerPostsService;
 import com.sgannu.blog.service.BloggerService;
@@ -22,6 +23,7 @@ import reactor.test.StepVerifier;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Tag("IntegrationTest")
 @ExtendWith(SpringExtension.class)
@@ -43,11 +45,14 @@ public class BlogServiceIntegrationTest {
 
     private BlogPost blogPostEntry;
     private BloggerPosts bloggerPosts;
+    private BlogPostComment blogPostComment;
 
     @BeforeEach
     void setup() {
         blogPostEntry = BlogPost.builder().content("TEST").build();
         bloggerPosts = BloggerPosts.builder().nickHandle("nickname").blogPosts(Arrays.asList(blogPostEntry)).build();
+        blogPostComment = BlogPostComment.builder().byNickHandle(TEST_ID).comment("Comment").build();
+
         mongoTemplate.dropCollection(BloggerPosts.class);
         createPostData();
     }
@@ -103,6 +108,22 @@ public class BlogServiceIntegrationTest {
         Mono<BloggerPosts> postEntity = bloggerPostsService.getPostsByNickHandle("nickname");
         StepVerifier.create(postEntity)
                 .consumeNextWith(response -> assertEquals(bloggerPosts, response))
+                .verifyComplete();
+    }
+
+    @Test
+    void comment() {
+        mockMvc.post().uri(String.format("posts/comment?commentOnId=%s&postId=%s", TEST_ID, TEST_ID))
+                .accept(MediaType.APPLICATION_JSON)
+                .body(Mono.just(blogPostComment), BlogPost.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        Mono<BloggerPosts> postEntity = bloggerPostsService.getPostsByNickHandle("nickname");
+        StepVerifier.create(postEntity)
+                .consumeNextWith(resp -> assertNotNull(resp))
+                // .consumeNextWith(response -> assertEquals(blogPostComment, response.getBlogPosts().get(0).getComments().get(0)))
                 .verifyComplete();
     }
 
