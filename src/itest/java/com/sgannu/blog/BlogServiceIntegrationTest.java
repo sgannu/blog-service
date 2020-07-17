@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sgannu.blog.model.BlogPost;
 import com.sgannu.blog.model.BloggerPosts;
 import com.sgannu.blog.service.BloggerPostsService;
+import com.sgannu.blog.service.BloggerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,8 @@ public class BlogServiceIntegrationTest {
     private ReactiveMongoTemplate mongoTemplate;
     @Autowired
     private BloggerPostsService bloggerPostsService;
+    @Autowired
+    private BloggerService bloggerService;
 
     private BlogPost blogPostEntry;
     private BloggerPosts bloggerPosts;
@@ -44,7 +47,7 @@ public class BlogServiceIntegrationTest {
     @BeforeEach
     void setup() {
         blogPostEntry = BlogPost.builder().content("TEST").build();
-        bloggerPosts = BloggerPosts.builder().blogPosts(Arrays.asList(blogPostEntry)).build();
+        bloggerPosts = BloggerPosts.builder().nickHandle("nickname").blogPosts(Arrays.asList(blogPostEntry)).build();
         mongoTemplate.dropCollection(BloggerPosts.class);
         createPostData();
     }
@@ -89,8 +92,22 @@ public class BlogServiceIntegrationTest {
                 .verifyComplete();
     }
 
+    @Test
+    void getPostsByNickHandle() {
+        mockMvc.get().uri("posts/get-by-nickhandle?nickHandle=nickname")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        Mono<BloggerPosts> postEntity = bloggerPostsService.getPostsByNickHandle("nickname");
+        StepVerifier.create(postEntity)
+                .consumeNextWith(response -> assertEquals(bloggerPosts, response))
+                .verifyComplete();
+    }
+
     private void createPostData() {
-        Mono<BloggerPosts> postEntity = mongoTemplate.save(bloggerPosts);
+        Mono<BloggerPosts> postEntity = bloggerService.newBlogger(bloggerPosts);
         StepVerifier.create(postEntity)
                 .consumeNextWith(response -> assertEquals(bloggerPosts, response))
                 .verifyComplete();

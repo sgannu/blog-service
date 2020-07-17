@@ -21,28 +21,29 @@ public class BloggerPostsService {
     }
 
     public Mono<BlogPost> findPostById(String bloggerId, String postId) {
-        Query query = new Query(Criteria.where("_id").is(bloggerId))
-                .addCriteria(Criteria.where("blogPosts._id").is(postId));
+        Query query = new Query(Criteria.where("id").is(bloggerId))
+                .addCriteria(Criteria.where("blogPosts.id").is(postId));
 
         Mono<BloggerPosts> bloggerPosts = mongoTemplate.findOne(query, BloggerPosts.class);
         return bloggerPosts.map(posts -> posts.getBlogPosts().get(0));
     }
 
     public Mono<BloggerPosts> newBlogPost(String bloggerId, BlogPost blogPost) {
-        Query query = new Query(Criteria.where("_id").is(bloggerId));
+        Query query = new Query(Criteria.where("id").is(bloggerId));
         Update update = new Update().addToSet("blogPosts", blogPost);
         return mongoTemplate.findAndModify(query, update, BloggerPosts.class);
     }
 
     public Mono<BloggerPosts> updateBlogPost(String bloggerId, BlogPost blogPost) {
-        Query query = new Query(Criteria.where("_id").is(bloggerId));
+        Query query = new Query(Criteria.where("id").is(bloggerId));
         Update update = new Update().pull("blogPosts", blogPost).pull("blogPosts", blogPost);
 
         return mongoTemplate.findAndModify(query, update, BloggerPosts.class);
     }
 
-    public Mono<BloggerPosts> newUserEntry(BloggerPosts bloggerPost) {
-        return mongoTemplate.save(bloggerPost);
+    public Mono<BloggerPosts> getPostsByNickHandle(String nickHandle) {
+        Query query = new Query(Criteria.where("nickHandle").is(nickHandle));
+        return mongoTemplate.findOne(query, BloggerPosts.class);
     }
 
 }

@@ -1,6 +1,7 @@
 package com.sgannu.blog.controller;
 
 import com.sgannu.blog.model.BlogPost;
+import com.sgannu.blog.model.BloggerPosts;
 import com.sgannu.blog.service.BloggerPostsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -34,5 +35,10 @@ public class BloggerPostsController {
     @GetMapping("/get-by-id")
     public Mono<BlogPost> getPostById(@RequestParam(name = "bloggerId") final String bloggerId, @RequestParam(name = "postId") final String postId) {
         return bloggerPostService.findPostById(bloggerId, postId);
+    }
+
+    @GetMapping("/get-by-nickhandle")
+    public Mono<BloggerPosts> getPostsByNickHandle(@RequestParam(name = "nickHandle") final String nickHandle) {
+        return bloggerPostService.getPostsByNickHandle(nickHandle);
     }
 }

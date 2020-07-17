@@ -69,4 +69,13 @@ public class BloggerPostsServiceTest {
                 .verifyComplete();
     }
 
+    @Test
+    void whengetPostsByNickHandleThenShouldReturnPosts() {
+        when(mongoTemplate.findOne(any(Query.class), any())).thenReturn(Mono.just(bloggerPosts));
+        Mono<BloggerPosts> postResponse = serviceUnderTest.getPostsByNickHandle(TEST_ID);
+        StepVerifier.create(postResponse)
+                .consumeNextWith(response -> assertEquals(bloggerPosts, response))
+                .verifyComplete();
+    }
+
 }
