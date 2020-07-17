@@ -1,4 +1,4 @@
-package com.sgannu.blog.model;
+package com.sgannu.blog.model.dao;
 
 import lombok.Builder;
 import lombok.Data;
@@ -6,14 +6,17 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.Date;
 import java.util.List;
 
 @Data
-@Document(collection = "blogger-posts")
+@Document
 @Builder
-public class BloggerPosts {
+public class BlogPostDocument {
     @Id
     private ObjectId _id;
-    private String nickhandle;
-    List<BlogPost> blogPosts;
+    private String title;
+    private String content;
+    private Date publishDate;
+    private List<BlogPostCommentDocument> comments;
 }

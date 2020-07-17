@@ -1,9 +1,10 @@
 package com.sgannu.blog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sgannu.blog.model.BlogPost;
-import com.sgannu.blog.model.BloggerPosts;
+import com.sgannu.blog.model.mvc.BlogPost;
+import com.sgannu.blog.model.mvc.BloggerPosts;
 import com.sgannu.blog.service.BloggerPostsService;
+import com.sgannu.blog.service.BloggerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-public class BlogServiceIntegrationTest {
+public class BloggerPostsIntegrationTest {
 
     public static final String TEST_ID = "test-id";
     @Autowired
@@ -37,6 +38,8 @@ public class BlogServiceIntegrationTest {
     private ReactiveMongoTemplate mongoTemplate;
     @Autowired
     private BloggerPostsService bloggerPostsService;
+    @Autowired
+    private BloggerService bloggerService;
 
     private BlogPost blogPostEntry;
     private BloggerPosts bloggerPosts;
@@ -44,10 +47,11 @@ public class BlogServiceIntegrationTest {
     @BeforeEach
     void setup() {
         blogPostEntry = BlogPost.builder().content("TEST").build();
-        bloggerPosts = BloggerPosts.builder().blogPosts(Arrays.asList(blogPostEntry)).build();
+        bloggerPosts = BloggerPosts.builder().nickHandle("nickname").blogPosts(Arrays.asList(blogPostEntry)).build();
         mongoTemplate.dropCollection(BloggerPosts.class);
         createPostData();
     }
+
     @Test
     void newBlogPost() throws Exception {
         mockMvc.post().uri("posts/new?bloggerId="+TEST_ID)
@@ -90,7 +94,7 @@ public class BlogServiceIntegrationTest {
     }
 
     private void createPostData() {
-        Mono<BloggerPosts> postEntity = mongoTemplate.save(bloggerPosts);
+        Mono<BloggerPosts> postEntity = bloggerService.newBlogger(bloggerPosts);
         StepVerifier.create(postEntity)
                 .consumeNextWith(response -> assertEquals(bloggerPosts, response))
                 .verifyComplete();

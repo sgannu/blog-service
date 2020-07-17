@@ -1,7 +1,13 @@
 package com.sgannu.blog.service;
 
-import com.sgannu.blog.model.BlogPost;
-import com.sgannu.blog.model.BloggerPosts;
+import com.sgannu.blog.model.dao.BlogPostDocument;
+import com.sgannu.blog.model.dao.BloggerPostsDocument;
+import com.sgannu.blog.model.mvc.BlogPost;
+import com.sgannu.blog.model.mvc.BloggerPosts;
+import com.sgannu.blog.model.transformer.BlogPostCommentTransformer;
+import com.sgannu.blog.model.transformer.BlogPostTransformer;
+import com.sgannu.blog.model.transformer.BloggerPostsTransformer;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -32,19 +38,31 @@ public class BloggerPostsServiceTest {
     private BloggerPostsService serviceUnderTest;
     @Mock
     private ReactiveMongoTemplate mongoTemplate;
+    @Mock
+    private BloggerPostsTransformer bloggerPostsTransformer;
+    @Mock
+    private BlogPostCommentTransformer blogPostCommentTransformer;
+    @Mock
+    private BlogPostTransformer blogPostTransformer;
+
     private BlogPost blogPostEntry;
     private BloggerPosts bloggerPosts;
+    private BlogPostDocument blogPostDocument;
+    private BloggerPostsDocument bloggerPostsDocument;
 
     @BeforeEach
     void setUp() {
         blogPostEntry = BlogPost.builder().title("title").build();
-        bloggerPosts = BloggerPosts.builder().blogPosts(Arrays.asList(blogPostEntry)).build();
+        bloggerPosts = BloggerPosts.builder().nickHandle("nickname").blogPosts(Arrays.asList(blogPostEntry)).build();
+        blogPostDocument = BlogPostDocument.builder()._id(new ObjectId()).title("title").build();
+        bloggerPostsDocument = BloggerPostsDocument.builder()._id(new ObjectId()).nickHandle("nickname").blogPosts(Arrays.asList(blogPostDocument)).build();
     }
 
     @Test
     void whenSavePostCalledThenShouldBeSavedOnRepo() {
-        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any())).thenReturn(Mono.just(bloggerPosts));
-        Mono<BloggerPosts> postId = serviceUnderTest.newBlogPost(TEST_ID, blogPostEntry);
+        when(blogPostTransformer.apply(blogPostEntry)).thenReturn(blogPostDocument);
+        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any())).thenReturn(Mono.just(bloggerPostsDocument));
+        Mono<String> postId = serviceUnderTest.newBlogPost(TEST_ID, blogPostEntry);
         StepVerifier.create(postId)
                 .consumeNextWith(response -> assertNotNull(response))
                 .verifyComplete();
@@ -53,7 +71,7 @@ public class BloggerPostsServiceTest {
     @Disabled
     @Test
     void whenUpdatePostCalledThenShouldBeSavedOnRepo() {
-        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any())).thenReturn(Mono.just(bloggerPosts));
+        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any())).thenReturn(Mono.just(bloggerPostsDocument));
         Mono<BloggerPosts> postResponse = serviceUnderTest.updateBlogPost(TEST_ID, blogPostEntry);
         StepVerifier.create(postResponse)
                 .consumeNextWith(response -> assertTrue(response.equals(TEST_ID)))
@@ -62,7 +80,8 @@ public class BloggerPostsServiceTest {
 
     @Test
     void whenGetByIdCalledThenShouldReturnPost() {
-        when(mongoTemplate.findOne(any(Query.class), any())).thenReturn(Mono.just(bloggerPosts));
+        when(blogPostTransformer.apply(blogPostDocument)).thenReturn(blogPostEntry);
+        when(mongoTemplate.findOne(any(Query.class), any())).thenReturn(Mono.just(blogPostDocument));
         Mono<BlogPost> postResponse = serviceUnderTest.findPostById(TEST_ID, TEST_ID);
         StepVerifier.create(postResponse)
                 .consumeNextWith(response -> assertEquals(blogPostEntry, response))
